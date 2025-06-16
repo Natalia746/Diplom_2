@@ -74,3 +74,15 @@ def create_order(ingredients, auth_token=None):
         allure.attach(str(response.status_code), name="Код ответа")
         allure.attach(response.text, name="Тело ответа")
         return response
+
+
+@allure.title("Удаление пользователя")
+def delete_user(auth_token):
+    with allure.step("Отправка запроса на удаление пользователя"):
+        response = requests.delete(
+            Url.BASE_URL + Url.DELETE_USER,
+            headers={'Authorization': auth_token}
+        )
+        allure.attach(str(response.status_code), name="Код ответа при удалении")
+        allure.attach(response.text, name="Тело ответа при удалении")
+        return response

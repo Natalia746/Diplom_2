@@ -80,3 +80,45 @@ class TestLoginUser:
                 f"Ожидаемое сообщение: '{Messages.EXPECTED_MESSAGE_UNSUCCESSFUL_AUTH}', "
                 f"Фактическое: '{response_data['message']}'"
             )
+
+
+
+
+    @allure.story("Неуспешная авторизация удалённого пользователя")
+    @allure.title("Попытка авторизации удалённого пользователя")
+    def test_login_deleted_user(self):
+        with allure.step("Зарегистрировать нового пользователя"):
+            user_data = UserCreationData.PAYLOAD
+            register_response = send_register_request(user_data)
+            assert register_response.status_code == 200, f"Ошибка регистрации: {register_response.text}"
+            token = register_response.json()['accessToken']
+            time.sleep(1)  # Задержка после регистрации
+
+        with allure.step("Удалить пользователя"):
+            delete_response = delete_user(token)
+            assert delete_response.status_code in [202], (
+                f"Не удалось удалить пользователя: {delete_response.text}"
+            )
+            allure.attach(str(delete_response.status_code), name="Код ответа при удалении")
+            allure.attach(delete_response.text, name="Тело ответа при удалении")
+            time.sleep(1)  # Задержка после удаления
+
+        login_data = {
+            "email": user_data["email"],
+            "password": user_data["password"]
+        }
+
+        with allure.step("Подготовить данные для авторизации удалённого пользователя"):
+            allure.attach(str(login_data), name="Данные для входа", attachment_type=allure.attachment_type.JSON)
+
+        with allure.step("Отправить запрос на авторизацию удалённого пользователя"):
+            response = send_auth_request(login_data)
+
+        with allure.step("Проверить ответ сервера"):
+            assert response.status_code == 401, "Ожидается статус 401 для удалённого пользователя"
+            response_data = response.json()
+            assert response_data["success"] is False, "Флаг успеха должен быть False"
+            assert response_data["message"] == Messages.EXPECTED_MESSAGE_UNSUCCESSFUL_AUTH, (
+                f"Ожидаемое сообщение: '{Messages.EXPECTED_MESSAGE_UNSUCCESSFUL_AUTH}', "
+                f"Фактическое: '{response_data['message']}'"
+            )
