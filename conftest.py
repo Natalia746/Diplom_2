@@ -2,8 +2,6 @@ import pytest
 import requests
 import time
 from data import *
-from unittest.mock import MagicMock
-
 
 
 @pytest.fixture
@@ -37,15 +35,7 @@ def registered_user():
     assert delete_response.status_code == 202, f"Failed to delete user: {delete_response.text}"
 
 
-@pytest.fixture
-def unauthorized_mock():
-    mock = MagicMock()
-    mock.status_code = 401
-    mock.json.return_value = {
-        "success": False,
-        "message": Messages.MESSAGE_UPDATE_WITHOUT_AUTH
-    }
-    return mock
+
 
 
 
