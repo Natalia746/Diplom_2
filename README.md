@@ -26,6 +26,7 @@ URL API можно изменить в data.py (класс Url.BASE_URL)
 Структура проекта
 text
 Diplom_2/
+├── allure-results                 # Отчет сформированный во время выполнения тестов allure
 ├── tests/
 │   ├── test_create_order.py       # Тесты создания заказов
 │   ├── test_login_user.py         # Тесты авторизации
@@ -36,8 +37,9 @@ Diplom_2/
 ├── conftest.py                    # Фикстуры Pytest
 ├── data.py                        # Константы и тестовые данные
 ├── requirements.txt               # Зависимости
-└── README.md
-Запуск тестов
+├── README.md
+└── .gitignore
+
 Запуск всех тестов:
 
 bash
