@@ -6,65 +6,27 @@ from data import *
 
 @allure.feature('Создание заказа POST https://stellarburgers.nomoreparties.site/api/orders')
 class TestCreateOrders:
-    @allure.title('Параметризованный тест создания заказа')
-    @pytest.mark.parametrize(
-        "ingredients_data, expected_status, expected_success, expected_message, check_order_number",
-        [
-            pytest.param(
-                'valid',
-                200,
-                True,
-                None,
-                True,
-                id="valid ingredients"
-            ),
-            pytest.param(
-                [],
-                400,
-                False,
-                Messages.MESSAGE_CREATE_ORDER_NO_INGREDIENTS,
-                False,
-                id="empty ingredients"
-            ),
-            pytest.param(
-                ['invalid_hash_123'],
-                500,
-                None,
-                None,
-                False,
-                id="invalid hash"
-            ),
-        ]
-    )
-    def test_create_order_parametrized(self,
-            registered_user,
-            ingredients_data,
-            expected_status,
-            expected_success,
-            expected_message,
-            check_order_number
-    ):
+    @allure.title('Успешное создание заказа с валидными ингредиентами')
+    def test_create_order_success(self, registered_user, valid_ingredients):
+        response = create_order(valid_ingredients, registered_user['token'])
 
-        if ingredients_data == 'valid':
-            ingredients_resp = get_ingredients()
-            ingredients = [ingredient['_id'] for ingredient in ingredients_resp.json()['data'][:2]]
-        else:
-            ingredients = ingredients_data
+        assert response.status_code == 200
+        data = response.json()
+        assert data['success'] is True
+        assert 'order' in data
+        assert 'number' in data['order']
 
-        response = create_order(ingredients, registered_user['token'])
+    @allure.title('Создание заказа без ингредиентов')
+    def test_create_order_empty_ingredients(self, registered_user):
+        response = create_order([], registered_user['token'])
 
-        assert response.status_code == expected_status
+        assert response.status_code == 400
+        data = response.json()
+        assert data['success'] is False
+        assert data['message'] == Messages.MESSAGE_CREATE_ORDER_NO_INGREDIENTS
 
-        if expected_status != 500:
-            data = response.json()
+    @allure.title('Создание заказа с невалидным хэшем ингредиента')
+    def test_create_order_invalid_hash(self, registered_user):
+        response = create_order(['invalid_hash_123'], registered_user['token'])
 
-            if expected_success is not None:
-                assert data['success'] == expected_success
-
-            # Проверяем сообщение об ошибке
-            if expected_message is not None:
-                assert data['message'] == expected_message
-
-            # Проверяем наличие номера заказа
-            if check_order_number:
-                assert 'order' in data and 'number' in data['order']
+        assert response.status_code == 500
