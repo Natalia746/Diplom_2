@@ -33,33 +33,54 @@ class TestLoginUser:
                 assert response_data["accessToken"].startswith("Bearer "), "AccessToken должен начинаться с 'Bearer '"
                 assert len(response_data["refreshToken"]) > 0, "RefreshToken не должен быть пустым"
 
-    @allure.story("Неуспешная авторизация")
-    @allure.title("Неуспешная авторизация зарегистрированного пользователя")
-    @pytest.mark.parametrize("login_data,expected_message", [
-        pytest.param(
-            {"email": "registered_user['email']", "password": "wrong_password"},
-            Messages.EXPECTED_MESSAGE_UNSUCCESSFUL_AUTH,
-            id="wrong_password"
-        ),
-        pytest.param(
-            {"password": "some_password"},
-            Messages.EXPECTED_MESSAGE_UNSUCCESSFUL_AUTH,
-            id="missing_email"
-        )
-    ])
-    def test_failed_login_scenarios(self, registered_user, login_data, expected_message):
-        if "email" in login_data and login_data["email"] == "registered_user['email']":
-            login_data["email"] = registered_user["email"]
+    @allure.title("Неуспешная авторизация с неверным паролем")
+    @pytest.mark.parametrize("wrong_password", ["wrong_password", "invalid_123", ""])
+    def test_wrong_password_login(self, registered_user, wrong_password):
+        login_data = {
+            "email": registered_user["email"],
+            "password": wrong_password
+        }
 
-        with allure.step(f"Отправить запрос с данными: {login_data}"):
+        with allure.step(f"Отправить запрос с неверным паролем: {wrong_password}"):
             response = send_auth_request(login_data)
 
         with allure.step("Проверить ответ сервера"):
             assert response.status_code == 401
             response_data = response.json()
             assert response_data["success"] is False
-            assert response_data["message"] == expected_message
+            assert response_data["message"] == Messages.EXPECTED_MESSAGE_UNSUCCESSFUL_AUTH
 
+    @allure.title("Неуспешная авторизация без email")
+    def test_missing_email_login(self):
+        login_data = {
+            "password": "some_password"
+        }
+
+        with allure.step("Отправить запрос без email"):
+            response = send_auth_request(login_data)
+
+        with allure.step("Проверить ответ сервера"):
+            assert response.status_code == 401
+            response_data = response.json()
+            assert response_data["success"] is False
+            assert response_data["message"] == Messages.EXPECTED_MESSAGE_UNSUCCESSFUL_AUTH
+
+    @allure.title("Неуспешная авторизация с несуществующим email")
+    @pytest.mark.parametrize("invalid_email", ["nonexistent@test.com", "invalid", ""])
+    def test_invalid_email_login(self, invalid_email):
+        login_data = {
+            "email": invalid_email,
+            "password": "some_password"
+        }
+
+        with allure.step(f"Отправить запрос с неверным email: {invalid_email}"):
+            response = send_auth_request(login_data)
+
+        with allure.step("Проверить ответ сервера"):
+            assert response.status_code == 401
+            response_data = response.json()
+            assert response_data["success"] is False
+            assert response_data["message"] == Messages.EXPECTED_MESSAGE_UNSUCCESSFUL_AUTH
     @allure.story("Неуспешная авторизация")
     @allure.title("Попытка авторизации с пустым JSON")
     def test_login_with_empty_json(self):

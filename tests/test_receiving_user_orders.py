@@ -27,10 +27,7 @@ class TestUserOrders:
         }
         mock_get_ingredients.return_value = mock_response
 
-        valid_ingredients = [
-            '61c0c5a71d1f82001bdaaa6d',
-            '61c0c5a71d1f82001bdaaa6f'
-        ]
+        valid_ingredients = Ingredients.VALID_INGREDIENTS
 
         create_response = create_order(valid_ingredients, registered_user['token'])
         assert create_response.status_code == 200
