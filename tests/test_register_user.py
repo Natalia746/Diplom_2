@@ -47,37 +47,35 @@ class TestUserRegistration:
             assert response_data['message'] == 'User already exists'
 
     @allure.story("Валидация полей")
-    @allure.title("Проверка валидации обязательных полей при регистрации")
-    @pytest.mark.parametrize('field, action, expected_msg', [
-        ('email', 'delete', Messages.EXPECTED_MESSAGE),
-        ('password', 'delete', Messages.EXPECTED_MESSAGE),
-        ('name', 'delete', Messages.EXPECTED_MESSAGE),
-        ('email', 'empty', Messages.EXPECTED_MESSAGE),
-        ('password', 'empty', Messages.EXPECTED_MESSAGE),
-        ('name', 'empty', Messages.EXPECTED_MESSAGE),
-    ])
-    def test_user_creation_field_validation(self, field, action, expected_msg):
-        with allure.step(f"Подготовить тестовые данные (поле {field}, действие: {action})"):
-            test_data = copy.deepcopy(UserCreationData.PAYLOAD)
-            if action == 'delete':
-                del test_data[field]
-            elif action == 'empty':
-                test_data[field] = ""
-            allure.attach(str(test_data), name="Модифицированные данные")
+    @allure.title("Регистрация без обязательного поля")
+    @pytest.mark.parametrize('field', ['email', 'password', 'name'])
+    def test_missing_field_validation(self, field):
+        test_data = copy.deepcopy(UserCreationData.PAYLOAD)
+        del test_data[field]
 
-        with allure.step("Отправить запрос на регистрацию"):
-            response = requests.post(
-                Url.BASE_URL + Url.REGISTER,
-                json=test_data
-            )
-            allure.attach(str(response.status_code), name="Код ответа")
-            allure.attach(response.text, name="Тело ответа")
+        with allure.step(f"Отправить запрос без поля {field}"):
+            response = requests.post(Url.BASE_URL + Url.REGISTER, json=test_data)
 
         with allure.step("Проверить ответ сервера"):
             assert response.status_code == 403
             response_data = response.json()
             assert response_data['success'] is False
-            assert response_data['message'] == expected_msg
+            assert response_data['message'] == Messages.EXPECTED_MESSAGE
+
+    @allure.title("Регистрация с пустым обязательным полем")
+    @pytest.mark.parametrize('field', ['email', 'password', 'name'])
+    def test_empty_field_validation(self, field):
+        test_data = copy.deepcopy(UserCreationData.PAYLOAD)
+        test_data[field] = ""
+
+        with allure.step(f"Отправить запрос с пустым полем {field}"):
+            response = requests.post(Url.BASE_URL + Url.REGISTER, json=test_data)
+
+        with allure.step("Проверить ответ сервера"):
+            assert response.status_code == 403
+            response_data = response.json()
+            assert response_data['success'] is False
+            assert response_data['message'] == Messages.EXPECTED_MESSAGE
 
     @allure.story("Валидация полей")
     @allure.title("Проверка регистрации с пустым JSON")

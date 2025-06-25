@@ -81,6 +81,7 @@ class TestLoginUser:
             response_data = response.json()
             assert response_data["success"] is False
             assert response_data["message"] == Messages.EXPECTED_MESSAGE_UNSUCCESSFUL_AUTH
+
     @allure.story("Неуспешная авторизация")
     @allure.title("Попытка авторизации с пустым JSON")
     def test_login_with_empty_json(self):
@@ -101,9 +102,6 @@ class TestLoginUser:
                 f"Ожидаемое сообщение: '{Messages.EXPECTED_MESSAGE_UNSUCCESSFUL_AUTH}', "
                 f"Фактическое: '{response_data['message']}'"
             )
-
-
-
 
     @allure.story("Неуспешная авторизация удалённого пользователя")
     @allure.title("Попытка авторизации удалённого пользователя")
