@@ -40,10 +40,6 @@ def valid_ingredients(get_ingredients):
     return [ingredient['_id'] for ingredient in ingredients_resp.json()['data'][:2]]
 
 
-import pytest
-from data import Ingredients
-
-
 @pytest.fixture
 def get_ingredients():
     """Фикстура возвращает мок-ответ с ингредиентами"""
